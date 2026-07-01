@@ -1,0 +1,41 @@
+name: drivelog
+description: DriveLog ist eine digitale Fahrtenbuch- und Fuhrpark-App für ein Schulprojekt mit Flutter und Dart.
+publish_to: 'none'
+
+version: 4.0.0+4
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Lokale Speicherung der Fahrten, Fahrzeuge, Tankbelege und Problemberichte.
+  shared_preferences: ^2.3.3
+
+  # HTTP-Anfragen für OpenStreetMap, OSRM und Werkstattsuche.
+  http: ^1.2.2
+
+  # GPS-Tracking für Start/Stopp-Fahrten.
+  geolocator: ^14.0.3
+
+  # Foto auswählen oder Kamera öffnen für Tankbeleg-Scan.
+  image_picker: ^1.2.3
+
+  # Texterkennung für Tankbelege. Funktioniert praktisch auf Android/iOS.
+  google_mlkit_text_recognition: ^0.15.1
+
+  # Öffnet Werkstatt-Adressen oder Suchbegriffe in Karten/Browser.
+  url_launcher: ^6.3.1
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
