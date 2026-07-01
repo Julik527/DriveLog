@@ -1,0 +1,65 @@
+name: DriveLog Windows Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build DriveLog for Windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Projekt herunterladen
+        uses: actions/checkout@v4
+
+      - name: Flutter installieren
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Projektordner erkennen
+        shell: powershell
+        run: |
+          if (Test-Path "pubspec.yaml") {
+            echo "PROJECT_DIR=." >> $env:GITHUB_ENV
+          } elseif (Test-Path "DriveLog\pubspec.yaml") {
+            echo "PROJECT_DIR=DriveLog" >> $env:GITHUB_ENV
+          } else {
+            Write-Host "pubspec.yaml wurde nicht gefunden."
+            Get-ChildItem -Recurse -Filter pubspec.yaml
+            exit 1
+          }
+
+      - name: Flutter Version anzeigen
+        run: flutter --version
+
+      - name: Windows Desktop aktivieren
+        run: flutter config --enable-windows-desktop
+
+      - name: Flutter Projektdateien erzeugen
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: flutter create --project-name drivelog .
+
+      - name: Pakete laden
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: flutter pub get
+
+      - name: Windows App bauen
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: flutter build windows --release
+
+      - name: Release Ordner vorbereiten
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force DriveLog_Windows
+          Copy-Item -Path "${{ env.PROJECT_DIR }}\build\windows\x64\runner\Release\*" -Destination "DriveLog_Windows" -Recurse
+
+      - name: Windows App als Download speichern
+        uses: actions/upload-artifact@v4
+        with:
+          name: DriveLog_Windows
+          path: DriveLog_Windows
