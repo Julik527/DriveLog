@@ -1,0 +1,49 @@
+name: DriveLog Windows Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build Windows App
+    runs-on: windows-latest
+
+    steps:
+      - name: Projekt herunterladen
+        uses: actions/checkout@v4
+
+      - name: Flutter installieren
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Flutter Version anzeigen
+        run: flutter --version
+
+      - name: Windows Desktop aktivieren
+        run: flutter config --enable-windows-desktop
+
+      - name: Pakete laden
+        run: flutter pub get
+
+      - name: Tests ausführen
+        run: flutter test
+
+      - name: Windows App bauen
+        run: flutter build windows --release
+
+      - name: Release Ordner vorbereiten
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force DriveLog_Windows
+          Copy-Item -Path "build\windows\x64\runner\Release\*" -Destination "DriveLog_Windows" -Recurse
+
+      - name: Windows App als ZIP speichern
+        uses: actions/upload-artifact@v4
+        with:
+          name: DriveLog_Windows
+          path: DriveLog_Windows
