@@ -48,3 +48,4 @@ jobs:
           name: whisper-linux-small-q5_1
           path: bundle/
           retention-days: 1
+          if-no-files-found: error
