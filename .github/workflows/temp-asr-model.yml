@@ -13,22 +13,30 @@ jobs:
   bundle:
     runs-on: ubuntu-latest
     steps:
-      - name: Download Vosk runtime and German model
+      - name: Build whisper.cpp and download multilingual model
         shell: bash
         run: |
           set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake git
+          git clone --depth 1 --branch v1.8.6 https://github.com/ggml-org/whisper.cpp.git whisper.cpp
+          cmake -S whisper.cpp -B whisper.cpp/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DGGML_NATIVE=OFF \
+            -DWHISPER_CURL=OFF
+          cmake --build whisper.cpp/build --config Release -j2
           mkdir -p bundle
+          cp whisper.cpp/build/bin/whisper-cli bundle/
           curl -L --fail --retry 5 --retry-all-errors \
-            'https://files.pythonhosted.org/packages/fc/ca/83398cfcd557360a3d7b2d732aee1c5f6999f68618d1645f38d53e14c9ff/vosk-0.3.45-py3-none-manylinux_2_12_x86_64.manylinux2010_x86_64.whl' \
-            -o bundle/vosk-0.3.45-py3-none-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
-          curl -L --fail --retry 5 --retry-all-errors \
-            'https://alphacephei.com/vosk/models/vosk-model-small-de-0.15.zip' \
-            -o bundle/vosk-model-small-de-0.15.zip
+            'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin' \
+            -o bundle/ggml-small-q5_1.bin
+          chmod +x bundle/whisper-cli
           sha256sum bundle/* > bundle/SHA256SUMS.txt
           ls -lh bundle
+          ldd bundle/whisper-cli || true
       - name: Upload ASR bundle
         uses: actions/upload-artifact@v4
         with:
-          name: temp-asr-bundle
+          name: temp-whisper-bundle
           path: bundle/
           retention-days: 1
