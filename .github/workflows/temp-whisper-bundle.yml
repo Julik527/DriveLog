@@ -1,0 +1,50 @@
+name: Temporary Whisper Bundle
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/temp-whisper-bundle.yml'
+  workflow_dispatch:
+
+jobs:
+  build-bundle:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout whisper.cpp
+        uses: actions/checkout@v4
+        with:
+          repository: ggml-org/whisper.cpp
+          ref: v1.9.1
+          path: whisper.cpp
+
+      - name: Build static whisper CLI
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cmake -S whisper.cpp -B whisper.cpp/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DWHISPER_BUILD_EXAMPLES=ON \
+            -DWHISPER_BUILD_TESTS=OFF \
+            -DWHISPER_BUILD_SERVER=OFF
+          cmake --build whisper.cpp/build --config Release -j2
+
+      - name: Download multilingual model
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p bundle
+          cp whisper.cpp/build/bin/whisper-cli bundle/
+          curl -L --fail --retry 5 --retry-delay 10 \
+            -o bundle/ggml-small-q5_1.bin \
+            https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin
+          chmod +x bundle/whisper-cli
+          bundle/whisper-cli --help >/dev/null
+          ls -lh bundle
+
+      - name: Upload local transcription bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: whisper-linux-small-q5_1
+          path: bundle/
+          retention-days: 1
