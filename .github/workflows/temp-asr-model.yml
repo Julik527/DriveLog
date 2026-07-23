@@ -1,0 +1,34 @@
+name: Temp ASR Model Bundle
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/temp-asr-model.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Vosk runtime and German model
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p bundle
+          curl -L --fail --retry 5 --retry-all-errors \
+            'https://files.pythonhosted.org/packages/fc/ca/83398cfcd557360a3d7b2d732aee1c5f6999f68618d1645f38d53e14c9ff/vosk-0.3.45-py3-none-manylinux_2_12_x86_64.manylinux2010_x86_64.whl' \
+            -o bundle/vosk-0.3.45-py3-none-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
+          curl -L --fail --retry 5 --retry-all-errors \
+            'https://alphacephei.com/vosk/models/vosk-model-small-de-0.15.zip' \
+            -o bundle/vosk-model-small-de-0.15.zip
+          sha256sum bundle/* > bundle/SHA256SUMS.txt
+          ls -lh bundle
+      - name: Upload ASR bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: temp-asr-bundle
+          path: bundle/
+          retention-days: 1
