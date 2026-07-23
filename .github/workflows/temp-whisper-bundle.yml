@@ -29,15 +29,18 @@ jobs:
             -DWHISPER_BUILD_SERVER=OFF
           cmake --build whisper.cpp/build --config Release -j2
 
-      - name: Download multilingual model
+      - name: Download multilingual models
         shell: bash
         run: |
           set -euxo pipefail
           mkdir -p bundle
           cp whisper.cpp/build/bin/whisper-cli bundle/
           curl -L --fail --retry 5 --retry-delay 10 \
-            -o bundle/ggml-small-q5_1.bin \
-            https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin
+            -o bundle/ggml-base-q5_1.bin \
+            https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base-q5_1.bin
+          curl -L --fail --retry 5 --retry-delay 10 \
+            -o bundle/ggml-tiny-q5_1.bin \
+            https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny-q5_1.bin
           chmod +x bundle/whisper-cli
           bundle/whisper-cli --help >/dev/null
           ls -lh bundle
@@ -45,7 +48,7 @@ jobs:
       - name: Upload local transcription bundle
         uses: actions/upload-artifact@v4
         with:
-          name: whisper-linux-small-q5_1
+          name: whisper-linux-base-tiny-q5_1
           path: bundle/
           retention-days: 1
           if-no-files-found: error
